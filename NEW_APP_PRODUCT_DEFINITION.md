@@ -335,8 +335,9 @@ future Git-readable design problem.
 
 Missing publish setup is handled just-in-time when the user clicks Publish.
 
-For review workflow, the app may need to connect GitHub, choose or create a
-project destination, and create a review against trunk.
+For review workflow, the app may need to add or use a GitHub PAT account and
+create a review against trunk. V1 review publishing requires an existing GitHub
+project destination with an identifiable trunk.
 
 For direct publish, the app may need to choose or create a project destination,
 then publish directly to the configured shared project.
@@ -349,6 +350,65 @@ Use plain language:
 - "Publish directly" and "updates the shared project without a review".
 - "Shared project", not `main` or `origin/main`.
 
+## GitHub Integration
+
+How's first forge integration is GitHub on `github.com` only. GitHub Enterprise,
+fork-based reviews, and providers other than GitHub are future work.
+
+How's first implementation should not use the existing
+`listKnownGithubAccounts` account-discovery API. Instead, How starts with one
+explicit setup path: the user can add a GitHub Personal Access Token from the
+Publish flow.
+
+How should store the PAT in How-owned secure credential storage, separate from
+GitButler's existing GitHub account storage. How should not use or mutate the
+existing GitButler account list for the first implementation. The How Electron
+process may use the GitHub TypeScript SDK for product operations such as
+creating a project on GitHub or creating a review. These APIs can move to Rust
+later.
+
+Adding a PAT validates the token, reads the authenticated `github.com` user, and
+stores a reference to the How-owned credential for the project in local Git
+config:
+
+```text
+how.githubCredential = <credential identifier>
+```
+
+The token itself must never be stored in Git config or committed project files.
+The credential identifier should be opaque and local to How. The visible account
+label should be the GitHub login, which How may store alongside the credential
+metadata for display. How does not show an account picker in the first
+implementation. If the stored PAT credential is missing, expired, or lacks
+permission, How asks the user to add a PAT again. For review publishing, the PAT
+user does not need to own the destination repository, but it must have
+permission to publish to it.
+
+## GitHub Project Creation
+
+When direct publish needs a project destination and a GitHub PAT is configured
+for the project, How should offer **Create project on GitHub** as the primary
+path and **Use existing project destination** as a secondary path. If no GitHub
+PAT is configured, **Add GitHub token** is the primary path and manual project
+destination entry remains available.
+
+Created GitHub projects are private by default in v1. There is no public/private
+choice in the first pass.
+
+Created GitHub projects live under the authenticated PAT user's account in v1.
+Organization selection is future work.
+
+The GitHub project name is pre-filled from the local folder name and can be
+edited before creation. How validates only simple GitHub-safe names locally. If
+GitHub reports that the name is already used, How shows a plain inline error and
+lets the user choose another name. How should not silently auto-suffix GitHub
+project names.
+
+How adds GitHub-created project destinations using the HTTPS clone URL returned
+by GitHub, adds it as `origin`, pushes the current branch, and sets upstream
+tracking. How does not store the project destination URL in How-specific config;
+normal Git remote and upstream config remain the source of truth.
+
 ## Direct Publish
 
 Direct publish is available only for projects explicitly configured for a
@@ -358,12 +418,14 @@ the first time the user clicks Publish, not during first run.
 The first-time Publish dialog asks "How should this project publish?" It shows:
 
 - **Publish directly**: enabled. "Updates the shared project without a review."
-- **Review before publishing**: disabled placeholder. "Coming later."
+- **Review before publishing**: enabled once implemented. "Creates a review on
+  GitHub."
 
-Choosing direct publish stores only `how.publishMode = direct` in local Git
-config. How does not duplicate destination URL or branch tracking information in
-How-specific config. Normal Git remote and upstream configuration remain the
-source of truth for where the project publishes.
+Choosing direct publish stores `how.publishMode = direct` in local Git config.
+Choosing review publishing stores `how.publishMode = review`. How does not
+duplicate destination URL or branch tracking information in How-specific config.
+Normal Git remote and upstream configuration remain the source of truth for
+where the project publishes.
 
 MVP direct publish destination rules:
 
@@ -385,6 +447,87 @@ push, How shows a plain-language error and leaves the local project unchanged.
 
 Publishing is disabled while browsing Checkpoints. The user must choose
 **Continue from here** or **Return to latest** before publishing.
+
+## Review Publish
+
+Review publishing sends the current Change to GitHub for review, then returns
+the local project to the shared trunk so the user can keep building on the normal
+project line.
+
+V1 review publishing requires:
+
+- `how.publishMode = review`.
+- A GitHub PAT account configured for the project or added during Publish.
+- An existing GitHub project destination.
+- An identifiable trunk branch.
+- The local project currently on that trunk branch.
+- At least one Checkpoint commit ahead of trunk after saving any unsaved
+  changes.
+
+If these requirements are not met, How stops with plain-language copy. For
+example, if there is nothing new to review: "There is nothing new to review
+yet." If the current branch is not the trunk How expects: "This project is not
+on the shared line How can review from yet."
+
+Review publish behavior:
+
+1. Save a Checkpoint first if there are unsaved changes.
+2. Detect the trunk branch. Prefer the remote default branch, then `main`, then
+   `master`. If How cannot identify trunk, stop plainly.
+3. Treat the existing local Checkpoint commits ahead of trunk as the review
+   content. Do not squash them in v1.
+4. Create a temporary local review branch at `HEAD` using the format
+   `change-YYYYMMDD-HHMMSS`.
+5. If that branch name already exists locally or remotely, retry with a numeric
+   suffix such as `change-YYYYMMDD-HHMMSS-2`.
+6. Push the review branch to the same GitHub repository as the project
+   destination. Do not force-push.
+7. Create a normal ready GitHub review from the review branch into trunk. Do not
+   create draft reviews in v1.
+8. Fetch/update trunk from GitHub and reset the local trunk to the latest shared
+   state.
+9. Delete the temporary local review branch. Keep the remote review branch
+   because GitHub needs it for the review.
+10. Resume normal Checkpointing on trunk.
+
+If the branch push succeeds but review creation fails, How should keep the
+remote branch rather than deleting it. The UI should say that How published the
+changes but could not create the review. Future versions may offer a retry or
+"finish review" action.
+
+After review creation succeeds, How does not automatically open GitHub. It shows
+status text such as "Review created just now" and may show a small **View
+review** action.
+
+The review flow creates a new review each time. Updating an existing review,
+review rework, and stacked reviews are future work.
+
+## Review Title And Description
+
+The GitHub review title and description are generated from the complete commit
+messages of the Checkpoint commits being submitted: the commits in the review
+branch that are not on trunk. Limit both AI input and fallback output to 20
+commits.
+
+Use the project coding-agent setting for review title and description
+generation:
+
+- `how.codingAgent = codex`: use the Codex SDK.
+- `how.codingAgent = claude`: use the Claude agent SDK.
+- `how.codingAgent = none`: skip AI.
+
+The review AI input is commit messages only, not code diffs. Agent output is
+strict plain text: first line title, remaining text description. If AI is
+disabled, unavailable, too slow, or fails, How falls back to a timestamp title
+and a description containing the submitted Checkpoint titles. If AI succeeds,
+use only the AI-generated title and description; do not append the Checkpoint
+list.
+
+Fallback title example:
+
+```text
+Review from June 14, 2026 at 15:30
+```
 
 ## Update Behavior
 
@@ -524,6 +667,22 @@ Desired future APIs:
 - `publishDirect(projectId, options)` with plain failure categories for missing
   branch, missing destination, rejected shared-project update, authentication,
   and network failures.
+- `storeGithubPatForHow(accessToken)` that validates a `github.com` PAT, stores
+  it in How-owned secure credential storage, and returns an opaque credential
+  identifier plus display login.
+- `getConfiguredGithubCredential(projectId)` that resolves the credential
+  referenced by `how.githubCredential`, without requiring How to list every
+  known GitHub account.
+- `createGithubProjectDestination(projectId, accountId, name)` that creates a
+  private GitHub project, adds the HTTPS project destination, and configures
+  tracking.
+- `getReviewPublishStatus(projectId)` with trunk, ahead count, destination, and
+  account readiness as How-level concepts.
+- `publishReview(projectId, options)` that saves if needed, creates the review
+  branch, pushes it, creates the GitHub review, returns local trunk to the shared
+  state, deletes the local transport branch, and returns a review URL.
+- `summarizeReview(projectId, options)`, or extending the agent summarization
+  abstraction to support review title/body generation from commit messages.
 - `getCheckpointStatus(projectId)` or `projectEligibility(projectId)`.
 - `meaningfulChanges(projectId)` or a Checkpoint dry-run/status result.
 
@@ -539,6 +698,12 @@ than making the caller assemble branch, commit, diff, and repository details.
   a shared service?
 - What does the project settings surface look like for changing publish mode
   without becoming an advanced mode?
+- What durable Git-readable marker should record that a Checkpoint was
+  published directly or sent for review?
+- How should How support reworking an existing review without exposing branch
+  management?
+- How should stacked reviews work while preserving the one-current-Change
+  product model?
 - What plain-language error taxonomy is needed for unsupported states?
 - Should we auto-detect file changes that should not be published? Ideally, we snapshot everything as commits, but we don't publish API_KEYs.
 
@@ -566,7 +731,28 @@ than making the caller assemble branch, commit, diff, and repository details.
 - Publish mode is chosen at first Publish and sticks per project.
 - Direct publish is allowed only for projects configured for direct publish.
 - Direct publish updates the shared project; avoid `main` language in the UI.
+- Direct publish can create a private GitHub project destination under the
+  authenticated PAT user when no destination exists.
+- GitHub-created destinations use editable folder-derived names, HTTPS URLs, and
+  no silent auto-suffixing.
+- How's first GitHub setup path is adding a PAT from the Publish flow. How does
+  not use `listKnownGithubAccounts` or show an account picker in the first
+  implementation.
+- How stores GitHub PATs in How-owned secure credential storage, separate from
+  GitButler's existing GitHub account storage.
+- How stores only an opaque credential reference per project as
+  `how.githubCredential`; tokens never live in Git config.
 - Publish creates a Checkpoint first.
+- Review publish creates `change-YYYYMMDD-HHMMSS`, pushes it to GitHub, creates
+  a normal ready review, returns local trunk to the shared state, and deletes the
+  temporary local review branch.
+- Review publish requires an existing GitHub destination/trunk, starts only from
+  trunk, submits existing Checkpoint commits without squashing, and creates no
+  empty reviews.
+- Review title/body use the configured coding agent with up to 20 submitted
+  commit messages, falling back to a timestamp title and Checkpoint title list.
+- Review v1 does not support GitHub Enterprise, forks, draft reviews, rework, or
+  stacked reviews.
 - Successful publish marks the pre-publish Checkpoint with the outcome.
 - Updates before publish are automatic when possible.
 - No force-push, rebase choices, or conflict-resolution UI in v1.
