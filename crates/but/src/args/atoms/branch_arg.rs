@@ -131,6 +131,7 @@ impl BranchArg {
     /// Try to resolve the branch to a stack that exists in the workspace.
     ///
     /// Returns `None` if the branch can't be found which might be caused it not being applied.
+    #[cfg(feature = "legacy")]
     pub fn try_resolve_stack(
         &self,
         ctx: &but_ctx::Context,
