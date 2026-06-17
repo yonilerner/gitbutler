@@ -195,7 +195,7 @@ impl OutputChannel {
 
 /// User input
 impl OutputChannel {
-    /// Return `true` if external prompt support like [`Selection`](cli_prompts::prompts::Selection) can be used,
+    /// Return `true` if external prompt support like [`dialoguer::Select`] can be used,
     /// and the output format permits prompts.
     ///
     /// Note that this is implied to be true if [Self::prepare_for_terminal_input()] returns `Some()`.
@@ -499,7 +499,6 @@ impl InputOutputChannel<'_> {
         }
     }
 
-    #[cfg_attr(not(feature = "but-2"), expect(dead_code))]
     pub fn prompt_select<'a, Key, Value>(
         &self,
         prompt: &str,
@@ -517,6 +516,29 @@ impl InputOutputChannel<'_> {
             return Ok(None);
         };
         Ok(Some(&items[selection].1))
+    }
+
+    pub fn prompt_multi_select<'a, Key, Value>(
+        &self,
+        prompt: &str,
+        items: &'a NonEmpty<(Key, Value)>,
+    ) -> anyhow::Result<Option<Vec<&'a Value>>>
+    where
+        Key: std::fmt::Display,
+    {
+        let Some(selections) = dialoguer::MultiSelect::new()
+            .with_prompt(prompt)
+            .items(items.iter().map(|(key, _)| key))
+            .interact_on_opt(&dialoguer::console::Term::stdout())?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(
+            selections
+                .into_iter()
+                .map(|selection| &items[selection].1)
+                .collect(),
+        ))
     }
 }
 
