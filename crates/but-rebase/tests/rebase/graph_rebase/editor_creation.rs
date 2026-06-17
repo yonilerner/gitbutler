@@ -37,12 +37,11 @@ fn four_commits() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta1, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/main
-    ● 120e3a9 c
-    ● a96434e b
-    ● d591dfe a
-    ● 35b8235 base
-    ╵
+    ◎  refs/heads/main
+    ●  120e3a9 c
+    ●  a96434e b
+    ●  d591dfe a
+    ●  35b8235 base
     ");
 
     Ok(())
@@ -70,19 +69,18 @@ fn merge_in_the_middle() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta2, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/with-inner-merge
-    ● e8ee978 on top of inner merge
-    ● 2fc288c Merge branch 'B' into with-inner-merge
+    ◎  refs/heads/with-inner-merge
+    ●  e8ee978 on top of inner merge
+    ●    2fc288c Merge branch 'B' into with-inner-merge
     ├─╮
-    ◎ │ refs/heads/A
-    ● │ add59d2 A: 10 lines on top
-    │ ◎ refs/heads/B
-    │ ● 984fd1c C: new file with 10 lines
+    ◎ │  refs/heads/A
+    ● │  add59d2 A: 10 lines on top
+    │ ◎  refs/heads/B
+    │ ●  984fd1c C: new file with 10 lines
     ├─╯
-    ◎ refs/heads/main
-    ◎ refs/tags/base
-    ● 8f0d338 base
-    ╵
+    ◎  refs/heads/main
+    ◎  refs/tags/base
+    ●  8f0d338 base
     ");
 
     Ok(())
@@ -114,22 +112,22 @@ fn three_branches_merged() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta3, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/main
-    ● 1348870 Merge branches 'A', 'B' and 'C'
+    ◎  refs/heads/main
+    ●      1348870 Merge branches 'A', 'B' and 'C'
     ├─┬─╮
-    ◎ │ │ refs/heads/A
-    ● │ │ add59d2 A: 10 lines on top
-    │ ◎ │ refs/heads/B
-    │ ● │ a748762 B: another 10 lines at the bottom
-    │ ● │ 62e05ba B: 10 lines at the bottom
-    │ │ ◎ refs/heads/C
-    │ │ ● 930563a C: add another 10 lines to new file
-    │ │ ● 68a2fc3 C: add 10 lines to new file
-    │ │ ● 984fd1c C: new file with 10 lines
-    ├─┴─╯
-    ◎ refs/tags/base
-    ● 8f0d338 base
-    ╵
+    ◎ │ │  refs/heads/A
+    ● │ │  add59d2 A: 10 lines on top
+    │ ◎ │  refs/heads/B
+    │ ● │  a748762 B: another 10 lines at the bottom
+    │ ● │  62e05ba B: 10 lines at the bottom
+    ├─╯ │
+    │   ◎  refs/heads/C
+    │   ●  930563a C: add another 10 lines to new file
+    │   ●  68a2fc3 C: add 10 lines to new file
+    │   ●  984fd1c C: new file with 10 lines
+    ├───╯
+    ◎  refs/tags/base
+    ●  8f0d338 base
     ");
 
     Ok(())
@@ -163,15 +161,14 @@ fn many_references() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta4, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/main
-    ● 120e3a9 c
-    ● a96434e b
-    ◎ refs/heads/X
-    ◎ refs/heads/Y
-    ◎ refs/heads/Z
-    ● d591dfe a
-    ● 35b8235 base
-    ╵
+    ◎  refs/heads/main
+    ●  120e3a9 c
+    ●  a96434e b
+    ◎  refs/heads/X
+    ◎  refs/heads/Y
+    ◎  refs/heads/Z
+    ●  d591dfe a
+    ●  35b8235 base
     ");
 
     Ok(())
@@ -218,21 +215,20 @@ fn first_parent_leg_long() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta5, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/with-inner-merge
-    ● 6ac5745 on top of inner merge
-    ● d20f547 Merge branch 'B' into with-inner-merge
+    ◎  refs/heads/with-inner-merge
+    ●  6ac5745 on top of inner merge
+    ●    d20f547 Merge branch 'B' into with-inner-merge
     ├─╮
-    ◎ │ refs/heads/A
-    ● │ 198d2e4 A: 10 more more lines on top
-    ● │ 7325853 A: 10 more lines on top
-    ● │ add59d2 A: 10 lines on top
-    │ ◎ refs/heads/B
-    │ ● 984fd1c C: new file with 10 lines
+    ◎ │  refs/heads/A
+    ● │  198d2e4 A: 10 more more lines on top
+    ● │  7325853 A: 10 more lines on top
+    ● │  add59d2 A: 10 lines on top
+    │ ◎  refs/heads/B
+    │ ●  984fd1c C: new file with 10 lines
     ├─╯
-    ◎ refs/heads/main
-    ◎ refs/tags/base
-    ● 8f0d338 base
-    ╵
+    ◎  refs/heads/main
+    ◎  refs/tags/base
+    ●  8f0d338 base
     ");
 
     Ok(())
@@ -279,21 +275,20 @@ fn second_parent_leg_long() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta6, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/with-inner-merge
-    ● a6775ea on top of inner merge
-    ● b85214b Merge branch 'B' into with-inner-merge
+    ◎  refs/heads/with-inner-merge
+    ●  a6775ea on top of inner merge
+    ●    b85214b Merge branch 'B' into with-inner-merge
     ├─╮
-    ◎ │ refs/heads/A
-    ● │ add59d2 A: 10 lines on top
-    │ ◎ refs/heads/B
-    │ ● f87f875 C: 10 more more lines on top
-    │ ● cb181a0 C: 10 more lines on top
-    │ ● 984fd1c C: new file with 10 lines
+    ◎ │  refs/heads/A
+    ● │  add59d2 A: 10 lines on top
+    │ ◎  refs/heads/B
+    │ ●  f87f875 C: 10 more more lines on top
+    │ ●  cb181a0 C: 10 more lines on top
+    │ ●  984fd1c C: new file with 10 lines
     ├─╯
-    ◎ refs/heads/main
-    ◎ refs/tags/base
-    ● 8f0d338 base
-    ╵
+    ◎  refs/heads/main
+    ◎  refs/tags/base
+    ●  8f0d338 base
     ");
 
     Ok(())
@@ -346,18 +341,17 @@ fn workspace_with_empty_stack() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta7, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/gitbutler/workspace
-    ● 74bcc92 GitButler Workspace Commit
+    ◎  refs/heads/gitbutler/workspace
+    ●    74bcc92 GitButler Workspace Commit
     ├─╮
-    ◎ │ refs/heads/stack-1
-    ● │ 2169646 Commit D
-    ● │ 46ef828 Commit C
-    │ ◎ refs/heads/stack-2
+    ◎ │  refs/heads/stack-1
+    ● │  2169646 Commit D
+    ● │  46ef828 Commit C
+    │ ◎  refs/heads/stack-2
     ├─╯
-    ● f555940 Commit A
-    ● d664be0 Commit B
-    ● fafd9d0 init
-    ╵
+    ●  f555940 Commit A
+    ●  d664be0 Commit B
+    ●  fafd9d0 init
     ");
 
     Ok(())
@@ -403,15 +397,15 @@ fn workspace_with_three_empty_stacks() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta8, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/gitbutler/workspace
-    ● a26ae77 GitButler Workspace Commit
+    ◎  refs/heads/gitbutler/workspace
+    ●      a26ae77 GitButler Workspace Commit
     ├─┬─╮
-    ◎ │ │ refs/heads/stack-1
-    │ ◎ │ refs/heads/stack-2
-    │ │ ◎ refs/heads/stack-3
-    ├─┴─╯
-    ● fafd9d0 init
-    ╵
+    ◎ │ │  refs/heads/stack-1
+    │ ◎ │  refs/heads/stack-2
+    ├─╯ │
+    │   ◎  refs/heads/stack-3
+    ├───╯
+    ●  fafd9d0 init
     ");
 
     Ok(())
@@ -448,11 +442,9 @@ fn commit_with_two_parents() -> Result<()> {
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta9, &repo)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/main
-    ● d70d863 a
-    ├─
-    ● 35b8235 base
-    ╵
+    ◎  refs/heads/main
+    ●  d70d863 a
+    ●  35b8235 base
     ");
 
     Ok(())
@@ -474,18 +466,17 @@ fn includes_extra_refs_in_editor_creation() -> Result<()> {
         let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta10, &repo)?;
 
         insta::assert_snapshot!(editor.steps_ascii(), @"
-        ◎ refs/heads/gitbutler/workspace
-        ● 74bcc92 GitButler Workspace Commit
+        ◎  refs/heads/gitbutler/workspace
+        ●    74bcc92 GitButler Workspace Commit
         ├─╮
-        ◎ │ refs/heads/stack-1
-        ● │ 2169646 Commit D
-        ● │ 46ef828 Commit C
-        │ ◎ refs/heads/stack-2
+        ◎ │  refs/heads/stack-1
+        ● │  2169646 Commit D
+        ● │  46ef828 Commit C
+        │ ◎  refs/heads/stack-2
         ├─╯
-        ● f555940 Commit A
-        ● d664be0 Commit B
-        ● fafd9d0 init
-        ╵
+        ●  f555940 Commit A
+        ●  d664be0 Commit B
+        ●  fafd9d0 init
         ");
     }
 
@@ -506,20 +497,20 @@ fn includes_extra_refs_in_editor_creation() -> Result<()> {
         )?;
 
         insta::assert_snapshot!(editor.steps_ascii(), @"
-        ◎ refs/heads/gitbutler/workspace
-        ● 74bcc92 GitButler Workspace Commit
+        ◎  refs/heads/gitbutler/workspace
+        ●    74bcc92 GitButler Workspace Commit
         ├─╮
-        ◎ │ refs/heads/stack-1
-        ● │ 2169646 Commit D
-        ● │ 46ef828 Commit C
-        │ ◎ refs/heads/stack-2
-        │ │ ◎ refs/heads/main
-        │ │ ● a0f2ac5 Commit X
-        ├─┴─╯
-        ● f555940 Commit A
-        ● d664be0 Commit B
-        ● fafd9d0 init
-        ╵
+        ◎ │  refs/heads/stack-1
+        ● │  2169646 Commit D
+        ● │  46ef828 Commit C
+        │ ◎  refs/heads/stack-2
+        ├─╯
+        │ ◎  refs/heads/main
+        │ ●  a0f2ac5 Commit X
+        ├─╯
+        ●  f555940 Commit A
+        ●  d664be0 Commit B
+        ●  fafd9d0 init
         ");
     }
 
@@ -570,21 +561,20 @@ fn merge_first_parent_older_than_second() -> Result<()> {
     let editor_project_meta12 = but_core::ref_metadata::ProjectMeta::default();
     let editor = Editor::create(&mut ws, &mut *meta, &editor_project_meta12, &repo)?;
 
-    insta::assert_snapshot!(editor.steps_ascii(), @r"
-    ◎ refs/heads/first-parent
-    ● 738ea18 commit on top of merge
-    ● 408ca26 merge second-parent into first-parent
+    insta::assert_snapshot!(editor.steps_ascii(), @"
+    ◎  refs/heads/first-parent
+    ●  738ea18 commit on top of merge
+    ●    408ca26 merge second-parent into first-parent
     ├─╮
-    ● │ 2854fa2 old commit on first-parent
-    │ ◎ refs/heads/second-parent
-    │ ● 75369b0 new commit 3 on second-parent
-    │ ● 553bbf7 new commit 2 on second-parent
-    │ ● 72614bb new commit 1 on second-parent
+    ● │  2854fa2 old commit on first-parent
+    │ ◎  refs/heads/second-parent
+    │ ●  75369b0 new commit 3 on second-parent
+    │ ●  553bbf7 new commit 2 on second-parent
+    │ ●  72614bb new commit 1 on second-parent
     ├─╯
-    ◎ refs/heads/main
-    ◎ refs/tags/base
-    ● 793a434 base
-    ╵
+    ◎  refs/heads/main
+    ◎  refs/tags/base
+    ●  793a434 base
     ");
 
     Ok(())
@@ -663,24 +653,23 @@ fn immutable_entrypoints_propogate_until_mutable_entrypoints() -> Result<()> {
         Editor::create_with_opts(&mut ws, &mut *meta, &editor_project_meta13, &repo, &opts)?;
 
     insta::assert_snapshot!(editor.steps_ascii(), @"
-    ◎ refs/heads/explicit-const (immutable)
-    ◎ refs/heads/main (immutable)
-    ● be4ae80 d
-    ◎ refs/heads/implicit-const (immutable)
-    ● 120e3a9 c
-    ◎ refs/heads/explicit-mut
-    ● a96434e b
-    │ ◎ refs/heads/explicit-const-2 (immutable)
-    │ ● d9fa122 g
-    │ ◎ refs/heads/implicit-const-2 (immutable)
-    │ ● 85bccf0 f
-    │ ◎ refs/heads/implicit-mut
-    │ ● c8dd361 e
+    ◎  refs/heads/explicit-const (immutable)
+    ◎  refs/heads/main (immutable)
+    ●  be4ae80 d
+    ◎  refs/heads/implicit-const (immutable)
+    ●  120e3a9 c
+    ◎  refs/heads/explicit-mut
+    ●  a96434e b
+    │ ◎  refs/heads/explicit-const-2 (immutable)
+    │ ●  d9fa122 g
+    │ ◎  refs/heads/implicit-const-2 (immutable)
+    │ ●  85bccf0 f
+    │ ◎  refs/heads/implicit-mut
+    │ ●  c8dd361 e
     ├─╯
-    ◎ refs/heads/foo
-    ● d591dfe a
-    ● 35b8235 base
-    ╵
+    ◎  refs/heads/foo
+    ●  d591dfe a
+    ●  35b8235 base
     ");
 
     Ok(())

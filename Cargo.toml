@@ -79,7 +79,7 @@ members = [
     # 👉Experimental IRC support
     "crates/but-irc", # 📄IRC client with WebSocket transport and GitButler protocol support.
     # 👉Experimental; needs docs, it's used from `but` CLI and not a library
-    "crates/but-agentlog",       # 📄Capture coding-agent logs into Git metadata.
+    "crates/but-agentlog",    # 📄Capture coding-agent logs into Git metadata.
     "crates/but-transaction", # 📄TBD
 
     ##
@@ -215,7 +215,8 @@ zip = { version = "4", default-features = false, features = ["bzip2"] }
 # Add the `tracing` or `tracing-detail` features to see more of gitoxide in the logs. Useful to see which programs it invokes.
 # When adjusting this, update `gix-testtools` as well!
 gix = { version = "0.84.0", git = "https://github.com/GitoxideLabs/gitoxide", rev = "4f089fce944ce8b3a8f3417441ed3c02cabcac26", default-features = false, features = [
-    "sha1", "sha256"
+    "sha1",
+    "sha256",
 ] }
 gix-testtools = { version = "0.19.0", git = "https://github.com/GitoxideLabs/gitoxide", rev = "4f089fce944ce8b3a8f3417441ed3c02cabcac26" }
 
@@ -312,6 +313,8 @@ urlencoding = "2.1"
 inventory = "0.3"
 git-meta-lib = { git = "https://github.com/git-meta/git-meta", rev = "b40c108514a992abea2f739889376334481af1a3" }
 smallvec = "1.15.1"
+
+sapling-renderdag = "0.1.0"
 
 [patch.crates-io]
 # Keep workspace crates that use the `gix 0.84` line on the same git revision.
